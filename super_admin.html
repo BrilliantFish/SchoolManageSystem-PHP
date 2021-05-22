@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <title>超级管理员界面</title>
+
+        <!--引入网页标题图片-->
+        <link rel="shortcut icon" href="img/favicon.ico">
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+        <script src="js/jquery-1.9.1.js"></script>
+        <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+        <script src="js/bootstrap.min.js"></script>
+
+        <!--css样式-->
+        <style>
+            .offset-top-10per{
+                margin-top: 10%;
+            }
+            .offset-top-15per{
+                margin-top: 15%;
+            }
+            .offset-top-25per{
+                margin-top: 25%;
+            }
+            .offset-top-10px{
+                margin-top: 10px;
+            }
+            .nav-background{
+                background-color: aliceblue;
+            }
+            .page-content{
+                padding-top: 30px;
+                width: 20%;
+                height: 700px;
+                float: left;
+                text-align: center;
+                border-right: 1px gray solid;
+                border-top: 1px gray solid;
+            }
+            .main-content{
+                float: right;
+                width: 80%;
+                border-left: 1px gray solid;
+                border-top: 1px gray solid;
+            }
+
+            .nav-div{
+                margin-bottom: 0px;
+            }
+            .nav-head{
+                padding-left: 20px;
+            }
+            
+            .text-content-align{
+                text-align: center;
+            }
+            .hidden{
+                display: none;
+            }
+
+            .panel-footer-background-color{
+                background-color: white;
+            }
+        </style>
+
+        <!-- active激活函数 -->
+        <script>
+            function cancelActive(){
+                $(".active").removeClass("active");
+            }
+        </script>
+
+        <!-- 退出登录 -->
+        <script>
+            function exit(){
+                $.post("php/web/logout.php",function (data) {
+                    window.location.href = "choose_user.html";
+                });
+            }
+        
+        </script>
+
+        <!-- 加载完页面，检查是否处于登录 -->
+        <script>
+            //文档加载结束检查是否登录
+            $(function(){
+                function checkLogin(){
+                    $.post("php/web/check_login.php", {user_type : "admin"}, function(info){
+                        if(info.flag){
+                            $("#user_name").text(info.data);
+                            var welcom_info = ''+
+                                '<div class="offset-top-25per">'+
+                                    '<center>'+
+                                        '<h3>'+info.data+'，欢迎来到校务管理系统</h3>'+
+                                    '</center>'+
+                                '</div>';
+                            $("#main_content").empty();
+                            $("#main_content").append(welcom_info);
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            window.location.href = "choose_user.html";
+                        }
+
+                    }, "json");
+
+                    return false;
+                }
+
+                checkLogin();
+            });
+        </script>
+
+        <!-- 检查密码格式 -->
+        <script>    
+            function checkFirstPassword(){
+				//获取第一次输入密码的值
+				var password = $("#first_password").val();
+                var password_size = password.length;
+                var flag;
+
+                if(password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//密码合法
+					$("#first_password").css("border","");
+				}
+				else{
+					//密码非法,加一个红色边框
+					$("#first_password").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+
+
+            function checkSecondPassword(){
+				//获取确认密码的值
+				var password = $("#second_password").val();
+                var password_size = password.length;
+                var flag;
+
+                if(password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//密码合法
+					$("#second_password").css("border","");
+				}
+				else{
+					//密码非法,加一个红色边框
+					$("#second_password").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+            
+            function equalPassword(){
+                var first_password = $("#first_password").val();
+                var second_password = $("#second_password").val();
+
+                if(first_password == second_password){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+
+            function checkUpdatePassword(){    //检查密码是否合法，合法则执行修改密码
+                if(checkFirstPassword() && checkSecondPassword() && equalPassword()){
+                    $.post("php/web/update_admin_password.php",$("#update_password_form").serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改密码");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("密码格式错误");
+                }
+                return false;
+            }
+
+        </script>
+
+        <!-- 右上角的个人信息模块，有查看个人信息和修改密码两个功能 -->
+        <script>
+            $(function(){
+                function show_info(){
+                    cancelActive();
+                    $.post("php/web/get_admin_info.php",function(info){
+                        if(info.flag){
+                            var sex = info.data["sex"] == 1 ? "男" : "女";
+                            
+                            var user_info = ''+
+                                '<div class=" offset-top-15per col-md-offset-4 col-md-4">'+
+                                    '<div class="panel panel-primary">'+
+                                        '<div class="panel-heading">个人信息</div>'+
+                                        '<div class="panel-body " id="panel-body">'+
+                                            '<form class="form-horizontal">'+
+                                                '<div class="form-group">'+
+                                                    '<label class="col-md-5 control-label">姓名：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+info.data["admin_name"]+'</p>'+
+                                                    '</div>'+
+                                                    '<label class="col-md-5 control-label">性别：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+sex+'</p>'+
+                                                    '</div>'+
+                                                    '<label class="col-md-5 control-label">身份证号：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+info.data["id_number"]+'</p>'+
+                                                    '</div>'+
+                                                '</div>'+
+                                            '</form>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>';
+                            $("#main_content").empty();
+                            $("#main_content").append(user_info);
+                            
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            window.location.href = "choose_user.html";
+                        }
+
+                    }, "json");
+
+                    return false;
+                }
+                
+                function update_password(){
+                    cancelActive();
+                    var update_password_div = ''+
+                        '<div class=" offset-top-15per col-md-offset-4 col-md-4">'+
+                            '<div class="panel panel-primary">'+
+                                '<div class="panel-heading">修改密码</div>'+
+                                '<div class="panel-body " id="panel-body">'+
+                                    '<form id="update_password_form" onsubmit="return checkUpdatePassword()">'+
+                                        '<div class="form-group">'+
+                                            '<input type="text" class="form-control" name="first_password" id="first_password" placeholder="输入密码" onblur="checkFirstPassword()">'+
+                                        '</div>'+
+                                        '<div class="form-group">'+
+                                            '<input type="text" class="form-control" name="second_password" id="second_password" placeholder="确认密码" onblur="checkSecondPassword()">'+
+                                        '</div>'+
+                                        '<div class="form-group">'+
+                                            '<button type="submit" class="col-md-12 btn btn-primary">修改密码</button>'+
+                                        '</div>'+ 
+                                    '<form>'+                
+                                '</div>'+
+                            '</div>'+
+                        '</div>';
+                    $("#main_content").empty();
+                    $("#main_content").append(update_password_div);
+                }
+                
+                $("#update_password").click(update_password);
+                
+                $("#show_info").click(show_info);
+            });
+                   
+        </script>
+
+        <!-- 判断注册或者修改管理员的信息格式是否正确 -->
+        <script>
+            //自动生成管理员性别
+            function generateAdminSex(){
+                var id_number = $("#id_number").val();
+                var sex = id_number.substr(16, 1);
+                var admin_sex;
+
+                if(sex % 2 == 0){
+                    sex = 0;
+                    admin_sex = "女";
+                }
+                else {
+                    sex = 1;
+                    admin_sex = "男";
+                }
+
+                $("#sex").val(sex);
+                $("#admin_sex").val(admin_sex);
+            }
+
+            function generateAdminID(){
+                var date = new Date();
+                var year = date.getFullYear();          //获取完整的年份(4位)
+
+                $.post("php/web/find_admin_count.php", {year : year}, function(info){
+                    var date = new Date();
+                    var year = date.getFullYear();      //获取完整的年份(4位)
+
+                    var number = 1 + info.data;
+                    if(number < 10){
+                        var admin_id = year + "0" + number;
+                        $("#admin_id").val(admin_id);
+                    }
+                    else if(number < 100){
+                        var admin_id = year + number;
+                        $("#admin_id").val(admin_id);
+                    }
+                    else{
+                        alert("本年度下的管理员人数已达上限，请联系网站开发部门");
+                    }
+                    
+                }, "json");
+            }
+
+            //检查用户ID是否存在, 注意得用Ajax先判断该ID是否已经存在
+            function checkAdminID(){      
+                //获取输入admin_id的值
+				var admin_id = $("#admin_id").val();
+                var admin_id_size = admin_id.length;
+
+                if(admin_id_size != 6){
+                    flag = false;
+                }
+                else{
+                    $.post("php/web/find_admin_by_id.php", {admin_id : admin_id}, flag = function(info){
+                        if(info.flag){ 
+                            return true;
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            return false;
+                        }
+                    }, "json");
+                }
+
+                if(flag){
+                    $("#admin_id").css("border","");
+                }
+                else{
+                    //admin_id非法,加一个红色边框
+					$("#admin_id").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+            
+            function checkAdminPassword(){
+                //获取输入密码的值
+				var password = $("#admin_password").val();
+                var password_size = password.length;
+                var flag;
+
+                if(password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//密码合法
+					$("#admin_password").css("border","");
+				}
+				else{
+					//密码非法,加一个红色边框
+					$("#admin_password").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+            
+            function checkAdminName(){
+                //获取输入姓名的值
+				var admin_name = $("#admin_name").val();
+                var admin_name_size = admin_name.length;
+                var flag;
+
+                if(admin_name_size <= 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//合法
+					$("#admin_name").css("border","");
+				}
+				else{
+					//没有输入姓名,加一个红色边框
+					$("#admin_name").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+
+            function checkUserLevel(){
+                //获取输入权限等级的值
+				var length = $("input:radio[name='user_level']:checked").length;
+                var flag;
+
+                if(length <= 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+				return flag;
+			}
+    
+            function checkIdNumber(){
+				//获取输入身份证的值
+				var id_number = $("#id_number").val();
+                var id_number_size = id_number.length;
+                var flag;
+
+                if(id_number_size != 18){
+                    flag = false;
+                    $("#sex").val("");
+                    $("#admin_sex").val("");
+                }
+                else{
+                    flag = true;
+                    generateAdminSex();
+                }
+                
+
+				if(flag){
+					//合法
+					$("#id_number").css("border","");
+				}
+				else{
+					//没有输入姓名,加一个红色边框
+					$("#id_number").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+
+            //检查注册信息
+            function checkSignUpInfo(obj){    
+                if(checkAdminID() && checkAdminPassword() && checkAdminName() && checkUserLevel() && checkIdNumber()){
+                    $.post("php/web/add_admin.php",$(obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功注册");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查修改信息
+            function checkUpdateInfo(self_obj){
+                if(checkAdminName() && checkUserLevel() && checkIdNumber()){
+                    $.post("php/web/update_admin_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+        </script>
+
+        <!-- 侧边栏的功能板块 -->
+        <script>
+            //加载添加管理员板块
+            $(function(){
+                function loadAddAdmin(){
+                    cancelActive();
+                    $("#manage_admin").addClass("active");
+                    $.post("html/add_admin.html",function(data){
+                        $("#main_content").empty();
+                        $("#main_content").append(data);
+                        $("#admin_id").blur(checkAdminID);
+                        $("#admin_password").blur(checkAdminPassword);
+                        $("#admin_name").blur(checkAdminName);
+                        $("#id_number").blur(checkIdNumber);
+                        generateAdminID();
+                    }, "text");
+                }
+                $("#add_a_admin").click(loadAddAdmin);
+            });
+
+            //分页展示管理员板块
+            function changePage(self_obj){
+                cancelActive();
+                $("#manage_admin").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_admin.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var admin_tr = '';
+                        var data = info.data;
+                        var admin_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < admin_list.length; i++) {
+                            start_number++;
+                            var admin = admin_list[i];
+                            var sex = admin["sex"] == 1 ? "男" : "女";
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+admin["admin_id"]+'</td>'+
+                                    '<td>'+admin["user_level"]+'</td>'+
+                                    '<td>'+admin["admin_name"]+'</td>'+
+                                    '<td>'+sex+'</td>'+
+                                    '<td>'+admin["id_number"]+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" onclick="updateAdminInfo(this)">修改</button></td>'+
+                                    '<td><button type="button" class="btn btn-danger btn-xs" delete_id="'+start_number+'" onclick="deleteAdmin(this)">删除</button></td>'+
+                                '</tr>';
+                            
+                            admin_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePage(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePage(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePage(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改普通管理员信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">管理员账号</th>'+
+                                                    '<th class="text-content-align">权限等级</th>'+
+                                                    '<th class="text-content-align">姓名</th>'+
+                                                    '<th class="text-content-align">性别</th>'+
+                                                    '<th class="text-content-align">身份证号</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+admin_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+    
+            //加载修改管理员板块,修改某个管理员的信息
+            function updateAdminInfo(self_obj){
+                var self_obj_id = $(self_obj).attr("id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+
+                var sex;
+                var user_level;
+                
+                if($(arr_td[3]).text() == "男"){
+                    sex = '<input type="hidden" name="sex" id="sex" value="1" >';
+                }
+                else{
+                    sex = '<input type="hidden" name="sex" id="sex" value="0" >';
+                }
+
+                if($(arr_td[1]).text() == "A"){
+                    user_level = ''+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="S"> S级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="A" checked="checked"> A级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="B" > B级'+
+                        '</label>';
+                }
+                else if($(arr_td[1]).text() == "B"){
+                    user_level = ''+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="S"> S级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="A"> A级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="B" checked="checked"> B级'+
+                        '</label>';
+                }
+                else{
+                    user_level = ''+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="S"  checked="checked"> S级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="A"> A级'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-3">'+
+                            '<input type="radio" name="user_level" id="user_level" value="B"> B级'+
+                        '</label>';
+                }
+
+
+                var htm = ''+
+                    '<div class="offset-top-10per col-md-offset-4 col-md-4">'+
+                        '<div class="panel panel-primary">'+
+                            '<div class="panel-heading">修改普通管理员信息</div>'+
+                            '<div class="panel-body " id="panel-body">'+
+                                '<form class="form-horizontal" id="add_common_admin" onsubmit="return checkUpdateInfo(this);">'+
+                                    '<div class="form-group">'+
+                                        '<label for="admin_id" class="col-md-3 control-label">账号</label>'+
+                                        '<div class="col-md-9">'+
+                                            '<input type="text" class="form-control" name="admin_id" id="admin_id" value="'+$(arr_td[0]).text()+'" readonly="readonly">'+
+                                        '</div>'+
+                                    '</div>'+
+                                    '<div class="form-group">'+
+                                        '<label for="admin_name" class="col-md-3 control-label">姓名</label>'+
+                                        '<div class="col-md-9">'+
+                                            '<input type="text" class="form-control" name="admin_name" id="admin_name" value="'+$(arr_td[2]).text()+'">'+
+                                        '</div>'+
+                                    '</div>'+
+                                    '<div class="form-group">'+
+                                        '<label for="id_number" class="col-md-3 control-label">身份证</label>'+
+                                        '<div class="col-md-9">'+
+                                            '<input type="text" class="form-control" name="id_number" id="id_number" value="'+$(arr_td[4]).text()+'">'+
+                                        '</div>'+
+                                    '</div>'+
+                                    '<div  class="form-group">'+
+                                        '<label class="col-md-3 control-label">性别</label>'+
+                                        '<div class="col-md-9">'+sex+
+                                            '<input type="text" class="form-control" name="admin_sex" id="admin_sex" value="'+$(arr_td[3]).text()+'" readonly="readonly">'+
+                                        '</div>'+
+                                    '</div>'+
+                                    '<div class="form-group">'+
+                                        '<label class="col-md-3 control-label">操作权限</label>'+
+                                        '<div class="col-md-9">'+user_level+'</div>'+
+                                    '</div>'+
+                                    '<div class="form-group">'+
+                                        '<hr>'+
+                                    '</div>'+
+                                    '<div class="form-group">'+
+                                        '<label for="id_number" class="col-md-3 control-label"></label>'+
+                                        '<div class="col-md-9">'+
+                                            '<button type="submit" class="col-md-8 btn btn-primary">修改</button>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</form>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>';
+
+                $("#main_content").empty();
+                $("#main_content").append(htm);
+                $("#admin_name").blur(checkAdminName);
+                $("#id_number").blur(checkIdNumber);
+            }
+        
+            //管理员板块,删除某个管理员的信息
+            function deleteAdmin(self_obj){
+                var self_obj_id = $(self_obj).attr("delete_id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var admin_id = $(arr_td[0]).text();
+                $.post("php/web/delete_admin.php", {admin_id : admin_id}, function(info){
+                    if(info.flag){
+                        $(self_obj).removeClass("btn-primary");
+                        $(self_obj).addClass("btn-danger");
+                        $(self_obj).text("管理员成功删除");
+                        $(self_obj).attr("disabled", "disabled");
+                    }
+                    else{
+                        alert(info.errorMsg);
+                    }
+                }, "json");
+            }
+        </script>
+    </head>
+    <body>
+        <nav class="navbar nav-div">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="">
+                    <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                    <span></span>
+                    超级管理员
+                </a>
+            </div>
+        
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:void(0);" id="logout" onclick="exit()">退出</a></li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span id="user_name"></span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu text-content-align">
+                            <li><a href="javascript:void(0);" id="show_info">查看个人信息</a></li>
+                            <li><a href="javascript:void(0);" id="update_password">修改密码</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="page-content">
+            <ul class="nav nav-pills nav-stacked">
+                <li id="manage_admin" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理管理员 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_admin" >添加管理员</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_admin" onclick="changePage(this)">查看管理员</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content" id="main_content">
+            
+        </div>
+    </body>
+</html>

@@ -1,0 +1,45 @@
+<div class="offset-top-10per col-md-offset-4 col-md-4">
+    <div class="panel panel-primary">
+        <div class="panel-heading">添加专业</div>
+        <div class="panel-body " id="panel-body">
+            <form class="form-horizontal" id="add_major" onsubmit="return checkAddMajorInfo(this);">
+                <div class="form-group" >
+                    <label for="school_name" class="col-md-3 control-label">选择学院</label>
+                    <div class="col-md-9">
+                        <div class="dropdown">
+                            <input type="hidden" name="school_id" id="school_id" value="">
+                            <input type="hidden" name="school_name" id="school_name" value="">
+                            <button class="btn btn-default dropdown-toggle col-md-12" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <span id="school_name_span" schoolID="">学院</span>
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu col-md-12 text-content-align" id="school_ul" aria-labelledby="dropdownMenu1">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="major_id" class="col-md-3 control-label">专业ID</label>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" name="major_id" id="major_id" readonly="readonly">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="major_name" class="col-md-3 control-label">专业名称</label>
+                    <div class="col-md-9">
+                        <input type="text" class="form-control" name="major_name" id="major_name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <hr>
+                </div>
+                <div class="form-group">
+                    <label for="" class="col-md-3 control-label"></label>
+                    <div class="col-md-9">
+                        <button type="submit" class="col-md-8 btn btn-primary">注册</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

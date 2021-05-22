@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <title>选择用户类型</title>
+
+        <!--引入网页标题图片-->
+        <link rel="shortcut icon" href="img/favicon.ico">
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+        <script src="js/jquery-1.9.1.js"></script>
+        <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+        <script src="js/bootstrap.min.js"></script>
+
+        <!--css样式-->
+        <style>
+            .offset-top-10per{
+                margin-top: 10%;
+            }
+            .offset-top-20px{
+                margin-top: 20px;
+            }
+            .offset-top-30px{
+                margin-top: 30px;
+            }
+            .offset-left-40per{
+                margin-left: 40%;
+            }
+            .panel-size-35per{
+                width: 35%;
+            }
+            .panel-text-align{
+                text-align: center;
+            }
+            .hidden{
+                display: none;
+            }
+        </style>
+
+        <!-- 发送用户类型 -->
+        <script>
+            $(function(){
+                function sendUserType(){
+                    var user_type;
+                    var button_id = $(this).attr("id");
+                    var url = "login.html?user_type=";
+                   
+                    if(button_id == "user_type_admin"){
+                        user_type = "admin";
+                        window.location.href = url+user_type;
+                    }
+                    else if(button_id == "user_type_teacher"){
+                        user_type = "teacher";
+                        window.location.href = url+user_type;
+                    }
+                    else if(button_id == "user_type_student"){
+                        user_type = "student";
+                        window.location.href = url+user_type;
+                    }
+                }
+                $("#user_type_admin").click(sendUserType);
+                $("#user_type_teacher").click(sendUserType);
+                $("#user_type_student").click(sendUserType);
+            });
+        </script>
+    </head>
+    <body>
+        <div class="offset-top-10per">
+            <div class="offset-left-40per">
+                <div class="panel panel-primary panel-size-35per panel-text-align">
+                    <div class="panel-heading">选择用户类型</div>
+                    <div class="panel-body">
+                        <button type="submit" class="col-md-12 btn btn-primary offset-top-20px" id="user_type_admin">管理员</button>
+                        <button type="submit" class="col-md-12 btn btn-primary offset-top-30px" id="user_type_teacher">教师</button>
+                        <button type="submit" class="col-md-12 btn btn-primary offset-top-30px" id="user_type_student">学生</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

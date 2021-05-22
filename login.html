@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <title>登录</title>
+
+        <!--引入网页标题图片-->
+        <link rel="shortcut icon" href="img/favicon.ico">
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+        <script src="js/jquery-1.9.1.js"></script>
+        <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+        <script src="js/bootstrap.min.js"></script>
+
+        <!--css样式-->
+        <style>
+            .offset-top-12per{
+                margin-top: 12%;
+            }
+            .offset-top-20px{
+                margin-top: 20px;
+            }
+            .offset-top-30px{
+                margin-top: 30px;
+            }
+            .offset-left-40per{
+                margin-left: 40%;
+            }
+            .panel-size{
+                width: 35%;
+            }
+            .panel-text-align{
+                text-align: center;
+            }
+        </style>
+        
+        <!-- 登录 -->
+        <script>
+			$(function(){
+                //获取url中的参数
+                function getUrlParam(name) {
+                    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+                    var r = window.location.search.substr(1).match(reg);    //匹配目标参数
+                    if (r != null) {
+                        return decodeURI(r[2]); //解码
+                    }
+                    return null;                //返回参数值
+                }
+
+                //请求登录
+				$("#login_form").submit(function () {
+                    var user_type = getUrlParam("user_type");
+                    var src = "php/web/do_"+user_type+"_login.php";
+                    $.post(src, $(this).serialize(), function (info) {
+                        if (info.flag){
+                            if(user_type == "admin"){
+                                if(info.data == "S"){
+                                    window.location.href = "./super_admin.html";
+                                }
+                                else if(info.data == "A"){
+                                    window.location.href = "a_admin.html";
+                                }
+                                else if(info.data == "B"){
+                                    window.location.href = "b_admin.html";
+                                }
+                            }
+                            else if(user_type == "teacher"){
+                                window.location.href = "teacher.html";
+                            }
+                            else if(user_type == "student"){
+                                window.location.href = "student.html";
+                            }
+                        }
+                        else{
+                            alert(info.errorMsg);
+                        }
+                    }, "json");
+                    return false;
+				});
+			});
+        
+        </script>
+    </head>
+    <body>
+        <div class="offset-top-12per">
+            <div class="offset-left-40per">
+                <div class="panel panel-primary panel-size panel-text-align">
+                    <div class="panel-heading">欢迎登录</div>
+                    <div class="panel-body">
+                        <form action="" id="login_form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="user_id" id="user_id" placeholder="请输入账号">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" class="form-control" name="user_password" id="user_password" placeholder="请输入密码">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="col-md-12 btn btn-primary">登录</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>  
+            </div>
+            
+        </div>
+
+        
+    </body>
+</html>

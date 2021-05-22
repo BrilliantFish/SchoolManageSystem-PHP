@@ -1,0 +1,3080 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <title>A级管理员界面</title>
+
+        <!--引入网页标题图片-->
+        <link rel="shortcut icon" href="img/favicon.ico">
+        
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+        <script src="js/jquery-1.9.1.js"></script>
+        <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+        <script src="js/bootstrap.min.js"></script>
+
+        <!--css样式-->
+        <style>
+            .offset-top-2per{
+                margin-top: 2%;
+            }
+            .offset-top-10per{
+                margin-top: 10%;
+            }
+            .offset-top-10px{
+                margin-top: 10px;
+            }
+            .offset-top-15per{
+                margin-top: 15%;
+            }
+            .offset-top-25per{
+                margin-top: 25%;
+            }
+            .nav-background{
+                background-color: aliceblue;
+            }
+            .page-content{
+                padding-top: 30px;
+                width: 20%;
+                height: 700px;
+                float: left;
+                text-align: center;
+                border-right: 1px gray solid;
+                border-top: 1px gray solid;
+            }
+            .main-content{
+                float: right;
+                border-left: 1px gray solid;
+                width: 80%;
+                border-top: 1px gray solid;
+            }
+
+            .nav-div{
+                margin-bottom: 0px;
+            }
+            .nav-head{
+                width: 20%;
+                text-align: center;
+            }
+            
+            .text-content-align{
+                text-align: center;
+            }
+            .panel-footer-background-color{
+                background-color: white;
+            }
+        </style>
+        
+        <!-- 退出登录 -->
+        <script>
+            function exit(){
+                $.post("php/web/logout.php",function (data) {
+                    window.location.href = "choose_user.html";
+                });
+            }
+        
+        </script>
+
+        <!-- active激活函数 -->
+        <script>
+            function cancelActive(){
+                $(".active").removeClass("active");
+            }
+        </script>
+
+        <!-- 加载完页面，检查是否处于登录 -->
+        <script>
+            //文档加载结束检查是否登录
+            $(function(){
+                function checkLogin(){
+                    $.post("php/web/check_login.php", {user_type : "admin"},function(info){
+                        if(info.flag){
+                            $("#user_name").text(info.data);
+                            var welcom_info = ''+
+                                '<div class="offset-top-25per">'+
+                                    '<center>'+
+                                        '<h3>'+info.data+'，欢迎来到校务管理系统</h3>'+
+                                    '</center>'+
+                                '</div>';
+                            $("#main_content").empty();
+                            $("#main_content").append(welcom_info);
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            window.location.href = "choose_user.html";
+                        }
+
+                    }, "json");
+
+                    return false;
+                }
+
+                checkLogin();
+            });
+        </script>
+
+        <!-- 检查密码格式 -->
+        <script>    
+            function checkFirstPassword(){
+				//获取第一次输入密码的值
+				var password = $("#first_password").val();
+                var password_size = password.length;
+                var flag;
+
+                if(password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//密码合法
+					$("#first_password").css("border","");
+				}
+				else{
+					//密码非法,加一个红色边框
+					$("#first_password").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+
+
+            function checkSecondPassword(){
+				//获取确认密码的值
+				var password = $("#second_password").val();
+                var password_size = password.length;
+                var flag;
+
+                if(password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+                
+
+				if(flag){
+					//密码合法
+					$("#second_password").css("border","");
+				}
+				else{
+					//密码非法,加一个红色边框
+					$("#second_password").css("border","1px solid red");
+				}
+
+				return flag;
+			}
+            
+            function equalPassword(){
+                var first_password = $("#first_password").val();
+                var second_password = $("#second_password").val();
+
+                if(first_password == second_password){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+
+            //检查密码是否合法，合法则执行修改密码
+            function checkUpdatePassword(){    
+                if(checkFirstPassword() && checkSecondPassword() && equalPassword()){
+                    $.post("php/web/update_admin_password.php",$("#update_password_form").serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改密码");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("密码格式错误");
+                }
+                return false;
+            }
+
+        </script>
+
+        <!-- 右上角的个人信息模块，有查看个人信息和修改密码两个功能 -->
+        <script>
+            $(function(){
+                function show_info(){
+                    cancelActive();
+                    $.post("php/web/get_admin_info.php",function(info){
+                        if(info.flag){
+                            var sex = info.data["sex"] == 1 ? "男" : "女";
+                            
+                            var user_info = ''+
+                                '<div class=" offset-top-15per col-md-offset-4 col-md-4">'+
+                                    '<div class="panel panel-primary">'+
+                                        '<div class="panel-heading">个人信息</div>'+
+                                        '<div class="panel-body " id="panel-body">'+
+                                            '<form class="form-horizontal">'+
+                                                '<div class="form-group">'+
+                                                    '<label class="col-md-5 control-label">姓名：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+info.data["admin_name"]+'</p>'+
+                                                    '</div>'+
+                                                    '<label class="col-md-5 control-label">性别：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+sex+'</p>'+
+                                                    '</div>'+
+                                                    '<label class="col-md-5 control-label">身份证号：</label>'+
+                                                    '<div class="col-md-7">'+
+                                                        '<p class="form-control-static">'+info.data["id_number"]+'</p>'+
+                                                    '</div>'+
+                                                '</div>'+
+                                            '</form>'+
+                                        '</div>'+
+                                    '</div>'+
+                                '</div>';
+                            $("#main_content").empty();
+                            $("#main_content").append(user_info);
+                            
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            window.location.href = "choose_user.html";
+                        }
+
+                    }, "json");
+
+                    return false;
+                }
+                
+                function update_password(){
+                    cancelActive();
+                    var update_password_div = ''+
+                        '<div class=" offset-top-15per col-md-offset-4 col-md-4">'+
+                            '<div class="panel panel-primary">'+
+                                '<div class="panel-heading">修改密码</div>'+
+                                '<div class="panel-body " id="panel-body">'+
+                                    '<form id="update_password_form" onsubmit="return checkUpdatePassword()">'+
+                                        '<div class="form-group">'+
+                                            '<input type="text" class="form-control" name="first_password" id="first_password" placeholder="输入密码" onblur="checkFirstPassword()">'+
+                                        '</div>'+
+                                        '<div class="form-group">'+
+                                            '<input type="text" class="form-control" name="second_password" id="second_password" placeholder="确认密码" onblur="checkSecondPassword()">'+
+                                        '</div>'+
+                                        '<div class="form-group">'+
+                                            '<button type="submit" class="col-md-12 btn btn-primary">修改密码</button>'+
+                                        '</div>'+ 
+                                    '<form>'+                
+                                '</div>'+
+                            '</div>'+
+                        '</div>';
+                    $("#main_content").empty();
+                    $("#main_content").append(update_password_div);
+                }
+                
+                $("#update_password").click(update_password);
+                $("#show_info").click(show_info);
+            });
+            
+            
+        </script>
+
+        <!-- 学院： 判断注册学院的信息格式是否正确 -->
+        <script>
+            //查看某个学院下的所有专业
+            function showMajorBySchoolID(self_obj){
+                var self_obj_id = $(self_obj).attr("id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var school_id = $(arr_td[0]).text();
+                var ul = "#major_ul_" + self_obj_id;
+                $.post("php/web/find_major_by_school_id.php", {school_id : school_id}, function(info){
+                    
+                    var list = info.data.list;
+                    var major_lis = "";
+                    for(var i = 0; i < list.length; i++){
+                        var a_major = list[i];
+                        major_lis += '<li><a href="javascript:void(0);" majorID="'+a_major.major_id+'">'+a_major.major_name+'</a></li>';
+                    }
+
+                    $(ul).empty();
+                    $(ul).append(major_lis);
+
+                }, "json");
+            }
+
+            //检查学院ID是否存在, 注意得用Ajax先判断该学院是否已经存在
+            function checkSchoolID(){
+                //获取输入school_id的值
+                var flag;
+				var school_id = $("#school_id").val();
+                var school_id_size = school_id.length;
+
+                if(school_id_size != 3){
+                    flag = false;
+                    $("#school_id").css("border","1px solid red");
+                    return flag;
+                }
+                else{
+                    $.post("php/web/find_school_by_id.php", {school_id : school_id}, function(info){
+                        if(info.flag){ 
+                            $("#school_id").css("border","");
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            $("#school_id").css("border","1px solid red");
+                        }
+                    }, "json");
+                }
+
+                var css = $("#school_id").css("border");
+
+
+                if(css != "1px solid rgb(102, 175, 233)"){
+                    flag = true;
+                }
+                else{
+                    flag = false;
+                }
+
+                return flag;
+
+            }
+
+            //检查学院是否存在, 注意得用Ajax先判断该学院是否已经存在
+            function checkSchoolName(){      
+                //获取输入school_name的值
+                var flag;
+				var school_name = $("#school_name").val();
+                var school_name_size = school_name.length;
+
+                if(school_name_size == 0){
+                    flag = false;
+                    $("#school_name").css("border","1px solid red");
+                    return flag;
+                }
+                else{
+                    $.post("php/web/find_school_by_name.php", {school_name : school_name}, function(info){
+                        if(info.flag){ 
+                            $("#school_name").css("border","");
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            $("#school_name").css("border","1px solid red");
+                        }
+                    }, "json");
+                }
+
+                var css = $("#school_name").css("border");
+
+
+                if(css != "1px solid rgb(102, 175, 233)"){
+                    flag = true;
+                }
+                else{
+                    flag = false;
+                }
+
+                return flag;
+            }
+
+            //检查学院注册信息
+            function checkAddSchoolInfo(obj){    
+                if(checkSchoolID() && checkSchoolName()){
+                    $.post("php/web/add_school.php",$(obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功添加学院");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查修改信息
+            function checkUpdateSchoolInfo(self_obj){
+                if(checkAdminName() && checkUserLevel() && checkAdminSex() && checkIdNumber()){
+                    $.post("php/web/update_admin_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+        </script>
+
+        <!-- 专业： 判断注册专业的信息格式是否正确 -->
+        <script>
+            //查看某个专业下的所有班级
+            function showClassByMajorID(self_obj){
+                var self_obj_id = $(self_obj).attr("id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var major_id= $(arr_td[0]).text();
+                var ul = "#class_ul_" + self_obj_id;
+                $.post("php/web/find_class_by_major_id.php", {major_id : major_id}, function(info){
+                    var list = info.data.list;
+                    var class_lis = "";
+                    for(var i = 0; i < list.length; i++){
+                        var a_class = list[i];
+                        class_lis += '<li><a href="javascript:void(0);"  onclick="changePageClassStudentOfMajor(this)" classID="'+a_class.class_id+'">'+a_class.class_name+'</a></li>';
+                    }
+
+                    $(ul).empty();
+                    $(ul).append(class_lis);
+
+                }, "json");
+            }
+
+            //专业中学院的下拉列表的触发事件
+            function selectSchoolOfMajor(self_obj){
+                $("#school_name_span").text($(self_obj).text());
+                $("#school_name_span").attr("schoolID", $(self_obj).attr("schoolID"));
+                $("#school_id").val($(self_obj).attr("schoolID"));
+                $("#school_name").val($(self_obj).text());
+                //自动生成专业ID
+                generateMajorID();
+            }
+
+            //自动生成专业ID
+            function generateMajorID(){      
+                $.post("php/web/find_school_major_count.php", {school_id : $("#school_id").val()}, function(info){
+                    //获取输入school_id的值
+                    var school_id = $("#school_id").val();
+                    
+                    if(info.data >= 0 && info.data <= 8){
+                        var number = 1 + info.data;
+                        var school_id = $("#school_id").val();
+                        var major_id = school_id + "0" + number;
+
+                        $("#major_id").val(major_id);
+                    }
+                    else if(info.data <= 98){
+                        var number = info.data + 1;
+                        var school_id = $("#school_id").val();
+                        var major_id = school_id + number;
+
+                        $("#major_id").val(major_id);
+                    }
+                    else{
+                        alert("该学院下的专业已达上限，请联系网站开发部门");
+                    }
+                    
+                }, "json");
+            }
+
+            //检查是否选择了学院
+            function checkSchoolNameOfMajor(){
+                //获取输入school_name的值
+                var flag;
+				var school_name = $("#school_name").val();
+                var school_name_size = school_name.length;
+
+                if(school_name_size == 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                
+                return flag;
+            }
+
+            //检查专业名称是否存在, 注意得用Ajax先判断该专业名称是否已经存在
+            function checkMajorName(){      
+                //获取输入major_name的值
+                var flag;
+				var major_name = $("#major_name").val();
+                var major_name_size = major_name.length;
+
+                if(major_name_size == 0){
+                    flag = false;
+                    $("#major_name").css("border","1px solid red");
+                    return flag;
+                }
+                else{
+                    $.post("php/web/find_major_by_name.php", {major_name : major_name}, function(info){
+                        if(info.flag){ 
+                            $("#major_name").css("border","");
+                        }
+                        else{
+                            alert(info.errorMsg);
+                            //major_name非法,加一个红色边框
+					        $("#major_name").css("border","1px solid red");
+                        }
+                    }, "json");
+                }
+
+                
+                var css = $("#major_name").css("border");
+
+
+                if(css != "1px solid rgb(102, 175, 233)"){
+                    flag = true;
+                }
+                else{
+                    flag = false;
+                }
+
+                return flag;
+            }
+
+            //检查专业注册信息
+            function checkAddMajorInfo(obj){    
+                if(checkMajorName() && checkSchoolNameOfMajor()){
+                    $.post("php/web/add_major.php",$(obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功添加专业");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查修改信息
+            function checkUpdateMajorInfo(self_obj){
+                if(checkAdminName() && checkUserLevel() && checkAdminSex() && checkIdNumber()){
+                    $.post("php/web/update_admin_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+        </script>
+
+        <!-- 班级： 判断注册班级的信息格式是否正确 -->
+        <script>
+            //检查专业是否有选
+            function checkSelectMajor(){
+                var majorID = $("#major_id").val();
+                var flag;
+
+                if(majorID == ""){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                return flag;
+            }
+
+            //检查年份是否有选
+            function checkSelectYear(){
+                var class_year = $("#class_year").val();
+                var flag;
+
+                if(class_year == ""){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                return flag;
+            }
+
+            //自动生成班级数
+            function generateClassNumber(){
+                $.post("php/web/find_major_class_count.php", {major_id : $("#major_id").val(), year : $("#class_year").val()}, function(info){
+                    //设置输入class_number的值
+                    $("#class_number").val(info.data+1);
+                    generateClassID();      //生成班级ID
+                    generateClassName();    //生成班级名称
+                }, "json");
+            }
+
+            //自动生成班级ID
+            function generateClassID(){
+                var class_year = $("#class_year").val(); 
+                var majorID = $("#major_id").val();
+                var class_number = $("#class_number").val();
+                if(class_number < 10){
+                    var class_id = class_year + majorID + class_number;
+                    $("#class_id").val(class_id);
+                }
+                else{
+                    alert("该专业下的班级已达上限，请联系网站开发部门");
+                }
+               
+            }
+
+            //自动生成班级名称
+            function generateClassName(){
+                var class_year =  $("#class_year").val();
+                var major_name = $("#major_name").val();
+                var class_number = $("#class_number").val();
+                var class_name = class_year + "级" + major_name + class_number + "班";
+
+                $("#class_name").val(class_name);
+            }
+ 
+            //添加专业：学院下拉列表的触发事件
+            function selectSchoolOfClass(self_obj){
+                $("#school_name_span").text($(self_obj).text());
+                $("#school_name_span").attr("schoolID", $(self_obj).attr("schoolID"));
+                $("#school_id").val($(self_obj).attr("schoolID"));
+                $("#school_name").val($(self_obj).text());
+
+                //重新选择学院的时候，原有的信息清空
+                $("#major_name_span").text("专业");
+                $("#major_name_span").attr("majorID", "");
+                $("#major_name").val("");
+                $("#major_id").val("");
+                $("#class_id").val("");
+                $("#class_name").val("");
+                $("#class_number").val("");
+
+                $.post("php/web/find_major_by_school_id.php", {school_id : $("#school_id").val()}, function(info){
+                    var list = info.data.list;
+                    var major_lis = "";
+                    for(var i = 0; i < list.length; i++){
+                        var a_major = list[i];
+                        major_lis += '<li><a href="javascript:void(0);" onclick="selectMajorOfClass(this)" majorID="'+a_major.major_id+'">'+a_major.major_name+'</a></li>';
+                    }
+
+                    $("#major_ul").empty();
+                    $("#major_ul").append(major_lis);
+
+                }, "json");
+            }
+            
+            //添加专业：专业下拉列表的触发事件
+            function selectMajorOfClass(self_obj){
+                $("#major_name_span").text($(self_obj).text());
+                $("#major_name_span").attr("majorID", $(self_obj).attr("majorID"));
+                $("#major_name").val($(self_obj).text());
+                $("#major_id").val($(self_obj).attr("majorID"));
+
+                if(checkSelectMajor() && checkSelectYear()){
+                    generateClassNumber();
+                }
+                else{
+                    $("#class_id").val("");
+                    $("#class_name").val("");
+                    $("#class_number").val("");
+                }
+            }
+
+            //年份下拉列表的触发事件
+            function selectYearOfClass(self_obj){
+                $("#year").text($(self_obj).text());
+                $("#year").attr("year", $(self_obj).attr("year"));
+                $("#class_year").val($(self_obj).attr("year"));
+
+                if(checkSelectMajor() && checkSelectYear()){
+                    generateClassNumber();
+                }
+                else{
+                    $("#class_id").val("");
+                    $("#class_name").val("");
+                    $("#class_number").val("");
+                }
+            }
+
+            //检查班级注册信息
+            function checkAddClassInfo(obj){   
+
+                if(checkSelectMajor() && checkSelectYear()){
+                    $.post("php/web/add_class.php",$(obj).serialize(), function (data) {
+                        if (data.flag){
+                            alert("成功添加班级");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查班级修改信息
+            function checkUpdateClassInfo(self_obj){
+                if(checkSelectMajor() && checkSelectYear() && checkClassNumber()){
+                    generateClassID();      //生成班级ID
+                    generateClassName();    //生成班级名称
+                }
+
+                if(checkAdminName() && checkUserLevel() && checkAdminSex() && checkIdNumber()){
+                    $.post("php/web/update_admin_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+ 
+        </script>
+
+        <!-- 教师： 判断注册或者修改教师的信息格式是否正确 -->
+        <script>
+
+            //自动生成教师ID
+            function generateTeacherID(){
+                var date = new Date();
+                var year = date.getFullYear();      //获取完整的年份(4位)
+
+                $.post("php/web/find_teacher_count.php", {year : year}, function(info){
+                    var date = new Date();
+                    var year = date.getFullYear();      //获取完整的年份(4位)
+
+                    var number = 1 + info.data;
+                    if(number < 10){
+                        var teacher_id = year + "00" + number;
+                        $("#teacher_id").val(teacher_id);
+                    }
+                    else if(number < 100){
+                        var teacher_id = year + "0" + number;
+                        $("#teacher_id").val(teacher_id);
+                    }
+                    else if(number < 1000){
+                        var teacher_id = year + number;
+                        $("#teacher_id").val(teacher_id);
+                    }
+                    else{
+                        alert("该学院下的专业已达上限，请联系网站开发部门");
+                    }
+                    
+                }, "json");
+            }
+
+            //自动生成教师性别
+            function generateTeacherSex(){
+                var id_number = $("#id_number").val();
+                var sex = id_number.substr(16, 1);
+                var teacher_sex;
+
+                if(sex % 2 == 0){
+                    sex = 0;
+                    teacher_sex = "女";
+                }
+                else {
+                    sex = 1;
+                    teacher_sex = "男";
+                }
+
+                $("#sex").val(sex);
+                $("#teacher_sex").val(teacher_sex);
+            }
+
+            //检查教师ID是否存在, 注意得用Ajax先判断该教师ID是否已经存在
+            function checkTeacherID(){      
+                //获取输入teacher_id的值
+                var flag;
+				var teacher_id = $("#teacher_id").val();
+                var teacher_id_size = teacher_id.length;
+
+                if(teacher_id_size != 7){
+                    flag = false;
+                    
+                }
+                else{
+                    flag = true;
+                }
+
+                return flag;
+            }
+ 
+            //检查教师密码是否符合标准
+            function checkTeacherPassword(){
+                //获取输入teacher_password的值
+				var teacher_password = $("#teacher_password").val();
+                var teacher_password_size = teacher_password.length;
+                var flag;
+
+                if(teacher_password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                if(flag){
+                    $("#teacher_password").css("border","");
+                }
+                else{
+                    //teacher_password非法,加一个红色边框
+					$("#teacher_password").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查教师名称是否为空
+            function checkTeacherName(){      
+                //获取输入teacher_name的值
+				var teacher_name = $("#teacher_name").val();
+                var teacher_name_size = teacher_name.length;
+                var flag;
+
+                if(teacher_name_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#teacher_name").css("border","");
+                }
+                else{
+                    //teacher_name非法,加一个红色边框
+					$("#teacher_name").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查教师生日
+            function checkTeacherBirthday(){
+                //获取输入teacher_birthday的值
+				var birthday = $("#birthday").val();
+                var birthday_size = birthday.length;
+                var flag;
+
+                if(birthday_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#birthday").css("border","");
+                }
+                else{
+                    //birthday非法,加一个红色边框
+					$("#birthday").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //自动生成教师出生日期
+            function generateTeacherBirthday(){
+                var id_number = $("#id_number").val();
+                var year = id_number.substr(6, 4);
+                var month = id_number.substr(10, 2);
+                var day = id_number.substr(12, 2);
+                var birthday = year + "-" + month + "-" + day;
+
+                $("#birthday").val(birthday);
+            }
+
+            //检查身份证号码
+            function checkTeacherIDNumber(){      
+                //获取输入id_number的值
+				var id_number = $("#id_number").val();
+                var id_number_size = id_number.length;
+
+                if(id_number_size != 18){
+                    flag = false;
+                    $("#birthday").val("");
+                    $("#sex").val("");
+                    $("#teacher_sex").val("");
+                }
+                else{
+                    generateTeacherBirthday();
+                    generateTeacherSex();
+                    flag = true;
+                }
+
+                if(flag){
+                    $("#id_number").css("border","");
+                }
+                else{
+                    //id_number非法,加一个红色边框
+					$("#id_number").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查国籍
+            function checkTeacherCountry(){
+                //获取输入国籍的值
+				var country = $("#country").val();
+                var country_size = country.length;
+
+                if(country_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#country").css("border","");
+                }
+                else{
+                    //country非法,加一个红色边框
+					$("#country").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查教师地址
+            function cheakTeacherAddress(){
+                //获取输入国籍的值
+				var address = $("#address").val();
+                var address_size = address.length;
+
+                if(address_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#address").css("border","");
+                }
+                else{
+                    //address非法,加一个红色边框
+					$("#address").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查教师的手机号码
+            function checkTeacherTel(){
+                //获取输入手机号码的值
+				var tellphone = $("#tellphone").val();
+                var tellphone_size = tellphone.length;
+
+                if(tellphone_size != 11){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#tellphone").css("border","");
+                }
+                else{
+                    //tellphone非法,加一个红色边框
+					$("#tellphone").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查教师的就职状态
+            function checkTeacherWorkStatus(){
+                var length = $("input:radio[name='work_status']:checked").length;
+                var flag;
+
+                if(length <= 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+				return flag;
+            }
+
+            //检查教师注册信息
+            function checkAddTeacherInfo(obj){    
+                if(checkTeacherID() && checkTeacherPassword() && checkTeacherName() && checkTeacherBirthday() && checkTeacherIDNumber() && checkTeacherCountry() && cheakTeacherAddress() && checkTeacherTel() && checkTeacherWorkStatus()){
+                    $.post("php/web/add_teacher.php",$(obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功添加教师");
+                            loadAddTeacher();
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查教师修改信息
+            function checkUpdateTeacherInfo(self_obj){
+                if(checkTeacherID() && checkTeacherName() && checkTeacherBirthday() && checkTeacherIDNumber() && checkTeacherCountry() && cheakTeacherAddress() && checkTeacherTel() && checkTeacherWorkStatus()){
+                    $.post("php/web/update_teacher_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改教师信息");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+ 
+        </script>
+
+        <!-- 学生： 判断注册或者修改学生的信息格式是否正确 -->
+        <script>
+            //清空学生输入框信息
+            function clearStudentInfo(){
+                $("#id_number").val("");
+                $("#begin_year").val("");
+                $("#sex").val("");
+                $("#student_sex").val("");
+                $("#student_id").val("");
+                $("#student_name").val("");
+                $("#birthday").val("");
+                $("#address").val("");
+                $("#tellphone").val("");
+            }
+
+            //自动生成学生ID和入学年份
+            function generateStudentID(){
+                var class_id = $("#class_id").val();
+                var begin_year = class_id.substr(0, 4);
+                $("#begin_year").val(begin_year);
+                $.post("php/web/find_class_student_count.php", {class_id : $("#class_id").val()}, function(info){
+                    if(info.data >= 0 && info.data <= 8){
+                        var student_number = 1 + info.data;
+                        var class_id = $("#class_id").val();
+                        var student_id = class_id + "0" + student_number;
+
+                        $("#student_id").val(student_id);
+                    }
+                    else if(info.data <= 98){
+                        var student_number = info.data + 1;
+                        var class_id = $("#class_id").val();
+                        var student_id = class_id + student_number;
+
+                        $("#student_id").val(student_id);
+                    }
+                    
+                }, "json");
+
+
+            }
+     
+            //添加学生：学院的下拉列表的触发事件
+             function selectSchoolOfStudent(self_obj){
+                $("#school_name_span").text($(self_obj).text());
+                $("#school_name_span").attr("schoolID", $(self_obj).attr("schoolID"));
+                $("#school_id").val($(self_obj).attr("schoolID"));
+                $("#school_name").val($(self_obj).text());
+
+                //重新选择学院，专业清空
+                $("#major_name_span").text("专业");
+                $("#major_name_span").attr("majorID", "");
+                $("#major_id").val("");
+                $("#major_name").val("");
+                $("#class_name_span").text("班级");
+                $("#class_name_span").attr("classID", "");
+                $("#class_id").val("");
+                $("#class_name").val("");
+                $("#student_id").val("");
+                $("#begin_year").val("");
+
+                $.post("php/web/find_major_by_school_id.php", {school_id : $("#school_id").val()}, function(info){
+                    var list = info.data.list;
+                    var major_lis = "";
+                    for(var i = 0; i < list.length; i++){
+                        var a_major = list[i];
+                        major_lis += '<li><a href="javascript:void(0);" onclick="selectMajorOfStudent(this)" majorID="'+a_major.major_id+'">'+a_major.major_name+'</a></li>';
+                    }
+
+                    $("#major_ul").empty();
+                    $("#major_ul").append(major_lis);
+
+                }, "json");
+
+            }
+
+            //添加学生：专业的下拉列表的触发事件
+            function selectMajorOfStudent(self_obj){
+                $("#major_name_span").text($(self_obj).text());
+                $("#major_name_span").attr("majorID", $(self_obj).attr("majorID"));
+                $("#major_id").val($(self_obj).attr("majorID"));
+                $("#major_name").val($(self_obj).text());
+
+                //重新选择专业，班级清空
+                $("#class_name_span").text("班级");
+                $("#class_name_span").attr("classID", "");
+                $("#class_id").val("");
+                $("#class_name").val("");
+                $("#student_id").val("");
+                $("#begin_year").val("");
+
+                $.post("php/web/find_class_by_major_id.php", {major_id : $("#major_id").val()}, function(info){
+                    var list = info.data.list;
+                    var class_lis = "";
+                    for(var i = 0; i < list.length; i++){
+                        var a_class = list[i];
+                        class_lis += '<li><a href="javascript:void(0);" onclick="selectClassOfStudent(this)" classID="'+a_class.class_id+'">'+a_class.class_name+'</a></li>';
+                    }
+
+                    $("#class_ul").empty();
+                    $("#class_ul").append(class_lis);
+
+                }, "json");
+
+            }
+
+            //添加学生：班级的下拉列表的触发事件
+            function selectClassOfStudent(self_obj){
+                $("#class_name_span").text($(self_obj).text());
+                $("#class_name_span").attr("classID", $(self_obj).attr("classID"));
+                $("#class_id").val($(self_obj).attr("classID"));
+                $("#class_name").val($(self_obj).text());
+
+                generateStudentID();
+            }
+ 
+            //检查学生密码是否符合标准
+            function checkStudentPassword(){
+                //获取输入student_password的值
+                var flag;
+				var student_password = $("#student_password").val();
+                var student_password_size = student_password.length;
+
+                if(student_password_size < 8){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                if(flag){
+                    $("#student_password").css("border","");
+                }
+                else{
+                    //student_password非法,加一个红色边框
+					$("#student_password").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生名称是否为空
+            function checkStudentName(){      
+                //获取输入student_name的值
+                var flag;
+				var student_name = $("#student_name").val();
+                var student_name_size = student_name.length;
+
+                if(student_name_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#student_name").css("border","");
+                }
+                else{
+                    //student_name非法,加一个红色边框
+					$("#student_name").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生生日
+            function checkStudentBirthday(){
+                //获取输入birthday的值
+                var flag;
+				var birthday = $("#birthday").val();
+                var birthday_size = birthday.length;
+
+                if(birthday_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#birthday").css("border","");
+                }
+                else{
+                    //birthday非法,加一个红色边框
+					$("#birthday").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //自动生成学生出生日期
+            function generateStudentBirthday(){
+                var id_number = $("#id_number").val();
+                var year = id_number.substr(6, 4);
+                var month = id_number.substr(10, 2);
+                var day = id_number.substr(12, 2);
+                var birthday = year + "-" + month + "-" + day;
+
+                $("#birthday").val(birthday);
+            }
+            
+            //自动生成学生性别
+            function generateStudentSex(){
+                var id_number = $("#id_number").val();
+                var sex = id_number.substr(16, 1);
+                var student_sex;
+
+                if(sex % 2 == 0){
+                    sex = 0;
+                    student_sex = "女";
+                }
+                else {
+                    sex = 1;
+                    student_sex = "男";
+                }
+
+                $("#sex").val(sex);
+                $("#student_sex").val(student_sex);
+            }
+
+            //检查身份证号码
+            function checkStudentIDNumber(){      
+                //获取输入id_number的值
+                var flag;
+				var id_number = $("#id_number").val();
+                var id_number_size = id_number.length;
+
+                if(id_number_size != 18){
+                    flag = false;
+                    $("#birthday").val("");
+                    $("#sex").val("");
+                    $("#student_sex").val("");
+                }
+                else{
+                   flag = true;
+                   generateStudentBirthday();
+                   generateStudentSex();
+                }
+
+                if(flag){
+                    $("#id_number").css("border","");
+                }
+                else{
+                    //id_number非法,加一个红色边框
+					$("#id_number").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查国籍
+            function checkStudentCountry(){
+                //获取输入国籍的值
+                var flag;
+				var country = $("#country").val();
+                var country_size = country.length;
+
+                if(country_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#country").css("border","");
+                }
+                else{
+                    //country非法,加一个红色边框
+					$("#country").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生地址
+            function cheakStudentAddress(){
+                //获取输入国籍的值
+                var flag;
+				var address = $("#address").val();
+                var address_size = address.length;
+
+                if(address_size == 0){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#address").css("border","");
+                }
+                else{
+                    //address非法,加一个红色边框
+                    $("#address").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生的手机号码
+            function checkStudentTel(){
+                //获取输入手机号码的值
+                var flag;
+				var tellphone = $("#tellphone").val();
+                var tellphone_size = tellphone.length;
+
+                if(tellphone_size != 11){
+                    flag = false;
+                }
+                else{
+                   flag = true;
+                }
+
+                if(flag){
+                    $("#tellphone").css("border","");
+                }
+                else{
+                    //tellphone非法,加一个红色边框
+					$("#tellphone").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生的入学年份
+            function checkStudentBeginYear(){
+                //获取输入入学年份的值
+                var flag;
+				var begin_year = $("#begin_year").val();
+                var begin_year_size = begin_year.length;
+
+                if(begin_year_size == 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+                if(flag){
+                    $("#begin_year").css("border","");
+                }
+                else{
+                    //begin_year非法,加一个红色边框
+                    $("#begin_year").css("border","1px solid red");
+                }
+
+                return flag;
+            }
+
+            //检查学生的就读状态
+            function checkStudentStudyStatus(){
+                var length = $("input:radio[name='study_status']:checked").length;
+                var flag;
+
+                if(length <= 0){
+                    flag = false;
+                }
+                else{
+                    flag = true;
+                }
+
+				return flag;
+            }
+
+            //检查学生注册信息
+            function checkAddStudentInfo(obj){    
+                if(checkStudentPassword() && checkStudentName() && checkStudentBirthday() && checkStudentIDNumber() && checkStudentCountry() && cheakStudentAddress() && checkStudentTel() && checkStudentStudyStatus() && checkStudentBeginYear()){
+                    $.post("php/web/add_student.php",$(obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功添加学生");
+                            clearStudentInfo();
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+
+            //检查学生修改信息
+            function checkUpdateStudentInfo(self_obj){
+                
+                if(checkStudentName() && checkStudentBirthday() && checkStudentIDNumber() && checkStudentCountry() && cheakStudentAddress() && checkStudentTel() && checkStudentStudyStatus()){
+                    $.post("php/web/update_student_info.php",$(self_obj).serialize(),function (data) {
+                        if (data.flag){
+                            alert("成功修改学生信息");
+                        }
+                        else{
+                            alert(data.errorMsg);
+                        }
+                    }, "json");
+                }
+                else{
+                    alert("注册信息格式错误");
+                }
+                return false;
+            }
+ 
+        </script>
+
+        <!-- 各种添加： 侧边栏的功能板块 -->
+        <script>
+            //添加学院：加载添加学院板块
+            $(function(){
+                function loadAddSchool(){
+                    cancelActive();
+                    $("#school").addClass("active");
+                    $.post("html/add_school.html",function(data){
+                        $("#main_content").empty();
+                        $("#main_content").append(data);
+                        $("#school_id").blur(checkSchoolID);
+                        $("#school_name").blur(checkSchoolName);
+                    }, "text");
+                }
+                $("#add_a_school").click(loadAddSchool);
+            });
+
+            //添加专业：加载添加专业板块
+            $(function(){
+                function loadAddMajor(){
+                    cancelActive();
+                    $("#major").addClass("active");
+                    $.post("html/add_major.html",function(data){
+                        $("#main_content").empty();
+                        $("#main_content").append(data);
+                        $("#major_name").blur(checkMajorName);
+
+                        $.post("php/web/find_all_school.php", function(info){
+                            var list = info.data.list;
+                            var school_lis = "";
+                            for(var i = 0; i < list.length; i++){
+                                var a_school = list[i];
+                                school_lis += '<li><a href="javascript:void(0);" onclick="selectSchoolOfMajor(this)" schoolID="'+a_school.school_id+'">'+a_school.school_name+'</a></li>';
+                            }
+
+                            $("#school_ul").empty();
+                            $("#school_ul").append(school_lis);
+
+                        }, "json");
+                    }, "text");
+                }
+                $("#add_a_major").click(loadAddMajor);
+            });
+
+            //添加班级：加载添加班级板块
+            $(function(){
+                function loadAddClass(){
+                    cancelActive();
+                    $("#classes").addClass("active");
+                    $.post("html/add_class.html",function(data){
+                        $("#main_content").empty();
+                        $("#main_content").append(data);
+                        $.post("php/web/find_all_school.php", function(info){
+                            var list = info.data.list;
+                            var school_lis = "";
+                            for(var i = 0; i < list.length; i++){
+                                var a_school = list[i];
+                                school_lis += '<li><a href="javascript:void(0);" onclick="selectSchoolOfClass(this)" schoolID="'+a_school.school_id+'">'+a_school.school_name+'</a></li>';
+                            }
+
+                            $("#school_ul").empty();
+                            $("#school_ul").append(school_lis);
+
+                        }, "json");
+                        
+                    }, "text");
+                }
+                $("#add_a_class").click(loadAddClass);
+            });
+
+
+            //添加教师：加载添加教师板块
+            function loadAddTeacher(){
+                cancelActive();
+                $("#teacher").addClass("active");
+                $.post("html/add_teacher.html",function(data){
+                    $("#main_content").empty();
+                    $("#main_content").append(data);
+                    $("#teacher_id").blur(checkTeacherID);
+                    $("#teacher_password").blur(checkTeacherPassword);
+                    $("#id_number").blur(checkTeacherIDNumber);
+                    $("#teacher_name").blur(checkTeacherName);
+                    $("#birthday").blur(checkTeacherBirthday);
+                    $("#country").blur(checkTeacherCountry);
+                    $("#address").blur(cheakTeacherAddress);
+                    $("#tellphone").blur(checkTeacherTel);
+                    generateTeacherID();
+                }, "text");
+            }
+            $(function(){
+                $("#add_a_teacher").click(loadAddTeacher);
+            });
+        
+            //添加学生：加载添加学生板块
+            function loadAddStudent(){
+                cancelActive();
+                $("#student").addClass("active");
+                $.post("html/add_student.html",function(data){
+                    $("#main_content").empty();
+                    $("#main_content").append(data);
+                    $("#student_password").blur(checkStudentPassword);
+                    $("#id_number").blur(checkStudentIDNumber);
+                    $("#student_name").blur(checkStudentName);
+                    $("#birthday").blur(checkStudentBirthday);
+                    $("#country").blur(checkStudentCountry);
+                    $("#address").blur(cheakStudentAddress);
+                    $("#tellphone").blur(checkStudentTel);
+
+                    $.post("php/web/find_all_school.php", function(info){
+                        var list = info.data.list;
+                        var school_lis = "";
+                        for(var i = 0; i < list.length; i++){
+                            var a_school = list[i];
+                            school_lis += '<li><a href="javascript:void(0);" onclick="selectSchoolOfStudent(this)" schoolID="'+a_school.school_id+'">'+a_school.school_name+'</a></li>';
+                        }
+
+                        $("#school_ul").empty();
+                        $("#school_ul").append(school_lis);
+
+                    }, "json");
+                }, "text");
+            }
+            $(function(){
+                $("#add_a_student").click(loadAddStudent);
+            });
+        
+        </script>
+
+        <!-- 各种分页：侧边栏的功能板块 -->
+        <script>
+            //专业：分页显示某个班级的学生
+            function changePageClassStudentOfMajor(self_obj){
+                var class_id = $(self_obj).attr("classID");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_student_by_class_id.php", {page_number: page_number, page_size: page_size, class_id : class_id}, function (info) { 
+                    if(info.flag){
+                        var student_tr = '';
+                        var data = info.data;
+                        var student_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < student_list.length; i++) {
+                            start_number++;
+                            var student = student_list[i];
+                            var sex = student.sex == 1 ? "男" : "女";
+                            var study_status;
+                            
+                            if(student.study_status == 0){
+                                study_status = "退学";
+                            }
+                            else if(student.study_status == 1){
+                                study_status = "就读";
+                            }
+                            else if(student.study_status == 2){
+                                study_status = "毕业";
+                            }
+                
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+student.student_id+'</td>'+
+                                    '<td>'+student.id_number+'</td>'+
+                                    '<td>'+student.student_name+'</td>'+
+                                    '<td>'+sex+'</td>'+
+                                    '<td>'+student.start_year+'</td>'+
+                                    '<td>'+study_status+'</td>'+
+                                    '<td>'+student.birthday+'</td>'+
+                                    '<td>'+student.country+'</td>'+
+                                    '<td>'+student.address+'</td>'+
+                                    '<td>'+student.tellphone+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" onclick="updateStudentInfo(this)">修改</button></td>'+
+                                    '<td><button type="button" class="btn btn-danger btn-xs" delete_id="'+start_number+'" onclick="deleteStudent(this)">删除</button></td>'+
+                                '</tr>';
+                            
+                            student_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" classID="'+class_id+'" onclick="changePageClassStudentOfMajor(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" classID="'+class_id+'"  onclick="changePageClassStudentOfMajor(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);"  classID="'+class_id+'" onclick="changePageClassStudentOfMajor(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改学生信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">学生ID</th>'+
+                                                    '<th class="text-content-align">身份证号码</th>'+
+                                                    '<th class="text-content-align">姓名</th>'+
+                                                    '<th class="text-content-align">性别</th>'+
+                                                    '<th class="text-content-align">入学年份</th>'+
+                                                    '<th class="text-content-align">就读状态</th>'+
+                                                    '<th class="text-content-align">出生日期</th>'+
+                                                    '<th class="text-content-align">国籍</th>'+
+                                                    '<th class="text-content-align">地址</th>'+
+                                                    '<th class="text-content-align">手机号码</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+student_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+
+            //班级：分页显示某个班级的学生
+            function changePageStudentOfClass(self_obj){
+                var class_id = $(self_obj).attr("classID");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_student_by_class_id.php", {page_number: page_number, page_size: page_size, class_id : class_id}, function (info) { 
+                    if(info.flag){
+                        var student_tr = '';
+                        var data = info.data;
+                        var student_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < student_list.length; i++) {
+                            start_number++;
+                            var student = student_list[i];
+                            var sex = student.sex == 1 ? "男" : "女";
+                            var study_status;
+                            
+                            if(student.study_status == 0){
+                                study_status = "退学";
+                            }
+                            else if(student.study_status == 1){
+                                study_status = "就读";
+                            }
+                            else if(student.study_status == 2){
+                                study_status = "毕业";
+                            }
+                
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+student.student_id+'</td>'+
+                                    '<td>'+student.id_number+'</td>'+
+                                    '<td>'+student.student_name+'</td>'+
+                                    '<td>'+sex+'</td>'+
+                                    '<td>'+student.start_year+'</td>'+
+                                    '<td>'+study_status+'</td>'+
+                                    '<td>'+student.birthday+'</td>'+
+                                    '<td>'+student.country+'</td>'+
+                                    '<td>'+student.address+'</td>'+
+                                    '<td>'+student.tellphone+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" onclick="updateStudentInfo(this)">修改</button></td>'+
+                                    '<td><button type="button" class="btn btn-danger btn-xs" class delete_id="'+start_number+'" onclick="deleteStudent(this)">删除</button></td>'+
+                                '</tr>';
+                            
+                            student_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" classID="'+class_id+'" onclick="changePageStudentOfClass(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" classID="'+class_id+'"  onclick="changePageStudentOfClass(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" classID="'+class_id+'"  onclick="changePageStudentOfClass(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改学生信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">学生ID</th>'+
+                                                    '<th class="text-content-align">身份证号码</th>'+
+                                                    '<th class="text-content-align">姓名</th>'+
+                                                    '<th class="text-content-align">性别</th>'+
+                                                    '<th class="text-content-align">入学年份</th>'+
+                                                    '<th class="text-content-align">就读状态</th>'+
+                                                    '<th class="text-content-align">出生日期</th>'+
+                                                    '<th class="text-content-align">国籍</th>'+
+                                                    '<th class="text-content-align">地址</th>'+
+                                                    '<th class="text-content-align">手机号码</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+student_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+
+            //分页展示学院板块
+            function changePageOfSchool(self_obj){
+                cancelActive();
+                $("#school").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_school.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var school_tr = '';
+                        var data = info.data;
+                        var school_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < school_list.length; i++) {
+                            start_number++;
+                            var school = school_list[i];
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+school.school_id+'</td>'+
+                                    '<td>'+school.school_name+'</td>'+
+                                    '<td>'+
+                                        '<div class="dropdown">'+
+                                            '<button  id="'+start_number+'" onclick="showMajorBySchoolID(this)" class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
+                                                '查看旗下所有专业'+
+                                                '<span class="caret"></span>'+
+                                            '</button>'+
+                                            '<ul id="major_ul_'+start_number+'" class="dropdown-menu col-md-12 text-content-align" aria-labelledby="dropdownMenu1">'+
+                                            '</ul>'+
+                                        '</div>'+
+                                    '</td>'+
+                                '</tr>';
+                            
+                            school_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePageOfSchool(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePageOfSchool(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePageOfSchool(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改学院信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">学院ID</th>'+
+                                                    '<th class="text-content-align">学院名称</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+school_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+        
+            //分页展示专业板块
+            function changePageOfMajor(self_obj){
+                cancelActive();
+                $("#major").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_major.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var major_tr = '';
+                        var data = info.data;
+                        var major_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < major_list.length; i++) {
+                            start_number++;
+                            var major = major_list[i];
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+major.major_id+'</td>'+
+                                    '<td>'+major.major_name+'</td>'+
+                                    '<td>'+
+                                        '<div class="dropdown">'+
+                                            '<button  id="'+start_number+'" onclick="showClassByMajorID(this)" class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">'+
+                                                '查看旗下所有班级'+
+                                                '<span class="caret"></span>'+
+                                            '</button>'+
+                                            '<ul id="class_ul_'+start_number+'" class="dropdown-menu col-md-12 text-content-align" aria-labelledby="dropdownMenu1">'+
+                                            '</ul>'+
+                                        '</div>'+
+                                    '</td>'+
+                                '</tr>';
+                            
+                            major_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePageOfMajor(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePageOfMajor(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = 1 + parseInt(data.page_number);
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePageOfMajor(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改专业信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">专业ID</th>'+
+                                                    '<th class="text-content-align">专业名称</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+major_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+        
+            //分页展示班级板块
+            function changePageOfClass(self_obj){
+                cancelActive();
+                $("#classes").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_class.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var class_tr = '';
+                        var data = info.data;
+                        var class_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < class_list.length; i++) {
+                            start_number++;
+                            var classes = class_list[i];
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+classes.class_id+'</td>'+
+                                    '<td>'+classes.class_name+'</td>'+
+                                    '<td>'+classes.class_year+'</td>'+
+                                    '<td>'+classes.class_number+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" classID="'+classes.class_id+'" onclick="changePageStudentOfClass(this)">查看班级所有学生</button></td>'+
+                                '</tr>';
+                            
+                            class_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePageOfClass(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePageOfClass(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePageOfClass(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改班级信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">班级ID</th>'+
+                                                    '<th class="text-content-align">班级名称</th>'+
+                                                    '<th class="text-content-align">班级届</th>'+
+                                                    '<th class="text-content-align">第几班级</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+class_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+        
+            //分页展示教师板块
+            function changePageOfTeacher(self_obj){
+                cancelActive();
+                $("#teacher").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_teacher.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var teacher_tr = '';
+                        var data = info.data;
+                        var teacher_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < teacher_list.length; i++) {
+                            start_number++;
+                            var teacher = teacher_list[i];
+                            var sex = teacher.sex == 1 ? "男" : "女";
+                            var work_status = teacher.work_status == 0 ? "离职" : "就职";
+                
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+teacher.teacher_id+'</td>'+
+                                    '<td>'+teacher.id_number+'</td>'+
+                                    '<td>'+teacher.teacher_name+'</td>'+
+                                    '<td>'+sex+'</td>'+
+                                    '<td>'+work_status+'</td>'+
+                                    '<td>'+teacher.birthday+'</td>'+
+                                    '<td>'+teacher.country+'</td>'+
+                                    '<td>'+teacher.address+'</td>'+
+                                    '<td>'+teacher.tellphone+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" onclick="updateTeacherInfo(this)">修改</button></td>'+
+                                    '<td><button type="button" class="btn btn-danger btn-xs" delete_id="'+start_number+'" onclick="deleteTeacher(this)">删除</button></td>'+
+                                '</tr>';
+                            
+                            teacher_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePageOfTeacher(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePageOfTeacher(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePageOfTeacher(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改教师信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">教师ID</th>'+
+                                                    '<th class="text-content-align">身份证号码</th>'+
+                                                    '<th class="text-content-align">姓名</th>'+
+                                                    '<th class="text-content-align">性别</th>'+
+                                                    '<th class="text-content-align">就职状态</th>'+
+                                                    '<th class="text-content-align">出生日期</th>'+
+                                                    '<th class="text-content-align">国籍</th>'+
+                                                    '<th class="text-content-align">地址</th>'+
+                                                    '<th class="text-content-align">手机号码</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+teacher_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+
+            //分页展示学生板块
+            function changePageOfStudent(self_obj){
+                cancelActive();
+                $("#student").addClass("active");
+                var page_number = $(self_obj).attr("page_number");
+				var page_size = 9;
+                $.post("php/web/page_query_of_student.php", {page_number: page_number, page_size: page_size}, function (info) { 
+                    if(info.flag){
+                        var student_tr = '';
+                        var data = info.data;
+                        var student_list = data.list;
+                        var start_number = (data.page_number-1)*(data.page_size);
+                        for (var i = 0; i < student_list.length; i++) {
+                            start_number++;
+                            var student = student_list[i];
+                            var sex = student.sex == 1 ? "男" : "女";
+                            var study_status;
+                            
+                            if(student.study_status == 0){
+                                study_status = "退学";
+                            }
+                            else if(student.study_status == 1){
+                                study_status = "就读";
+                            }
+                            else if(student.study_status == 2){
+                                study_status = "毕业";
+                            }
+                
+                            var d = '' +
+                                '<tr id="tr_'+start_number+'">'+
+                                    '<th>'+start_number+'</th>'+
+                                    '<td>'+student.student_id+'</td>'+
+                                    '<td>'+student.id_number+'</td>'+
+                                    '<td>'+student.student_name+'</td>'+
+                                    '<td>'+sex+'</td>'+
+                                    '<td>'+student.start_year+'</td>'+
+                                    '<td>'+study_status+'</td>'+
+                                    '<td>'+student.birthday+'</td>'+
+                                    '<td>'+student.country+'</td>'+
+                                    '<td>'+student.address+'</td>'+
+                                    '<td>'+student.tellphone+'</td>'+
+                                    '<td><button type="button" class="btn btn-primary btn-xs" id="'+start_number+'" onclick="updateStudentInfo(this)">修改</button></td>'+
+                                    '<td><button type="button" class="btn btn-danger btn-xs" delete_id="'+start_number+'" onclick="deleteStudent(this)">删除</button></td>'+
+                                '</tr>';
+                            
+                            student_tr += d;
+                        }
+
+                        var lis = "";
+                        var beforePage;
+                        //计算上一页的页码
+                        var beforeNum =  data.page_number - 1;
+                        if(beforeNum <= 0){
+                            beforeNum = 1;
+                            beforePage = '<li><a href="javascript:void(0);">&laquo;</a></li>';
+                        }
+                        else {
+                            beforePage = '<li><a href="javascript:void(0);" onclick="changePageOfStudent(this)" page_number="'+beforeNum+'">&laquo;</a></li>';
+                        }
+
+
+                        lis += beforePage;
+
+                        //展示分页页码
+                        /*
+                            1.一共展示5个页码，能够达到前2后2的效果
+                            2.如果前边不够2个，后边补齐5个
+                            3.如果后边不足2个，前边补齐5个
+                        */
+
+                        // 定义开始位置begin,结束位置 end
+                        var begin;   //开始位置
+                        var end;     //结束位置
+
+                        //要显示个5页码
+                        if(data.total_page < 5){
+                            //总页码不够5页
+                            begin = 1;
+                            end = data.total_page;
+                        }
+                        else{
+                            //总页码超过5页
+
+                            begin = data.page_number - 2 ;
+                            end = data.page_number + 2 ;
+
+                            //如果前边不够2个，后边补齐5个
+                            if(begin < 1){
+                                begin = 1;
+                                end = begin + 4;
+                            }
+
+                            //3.如果后边不足2个，前边补齐5个
+                            if(end > data.total_page){
+                                end = data.total_page;
+                                begin = end - 4;
+                            }
+                        }
+                        for (var i = begin; i <= end ; i++) {
+                            var li;
+                            //判断当前页码是否等于i
+                            if(data.page_number == i){
+                                li = '<li class="active" ><a href="javascript:void(0);">'+i+'</a></li>';
+                            }
+                            else{
+                                //创建页码的li
+                                li = '<li><a href="javascript:void(0);" onclick="changePageOfStudent(this)" page_number="'+i+'">'+i+'</a></li>';
+                            }
+                            //拼接字符串
+                            lis += li;
+                        }
+
+                        //计算下一页的页码
+                        var afterNum = parseInt(data.page_number) + 1;
+                        if(afterNum > data.total_page){
+                            afterNum = data.total_page;
+                            lis += '<li><a href="javascript:void(0);">&raquo;</a></li>';
+
+                        }
+                        else {
+                            lis += '<li><a href="javascript:void(0);" onclick="changePageOfStudent(this)" page_number="'+afterNum+'">&raquo;</a></li>';
+                        }
+
+                        var htm = ''+
+                            '<div class="col-md-12 offset-top-10px">'+
+                                '<div class="panel panel-primary">'+
+                                    '<div class="panel-heading">修改学生信息</div>'+
+                                    '<div class="panel-body " id="panel-body">'+
+                                        '<table class="table table-hover text-content-align">'+
+                                            '<thead>'+
+                                                '<tr class="">'+
+                                                    '<th>#</th>'+
+                                                    '<th class="text-content-align">学生ID</th>'+
+                                                    '<th class="text-content-align">身份证号码</th>'+
+                                                    '<th class="text-content-align">姓名</th>'+
+                                                    '<th class="text-content-align">性别</th>'+
+                                                    '<th class="text-content-align">入学年份</th>'+
+                                                    '<th class="text-content-align">就读状态</th>'+
+                                                    '<th class="text-content-align">出生日期</th>'+
+                                                    '<th class="text-content-align">国籍</th>'+
+                                                    '<th class="text-content-align">地址</th>'+
+                                                    '<th class="text-content-align">手机号码</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                    '<th class="text-content-align">功能</th>'+
+                                                '</tr>'+
+                                            '</thead>'+
+                                            '<tbody>'+student_tr+'</tbody>'+
+                                        '</table>'+                          
+                                    '</div>'+
+                                    '<div class="panel-footer panel-footer-background-color">'+
+                                        '<center>'+
+                                            '<ul class="pagination">'+lis+'</ul>'+
+                                        '</center>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</div>';
+                        $("#main_content").empty();
+                        $("#main_content").append(htm);
+                    }
+                    else{
+                        alert(info.errorMsg);
+                        window.location.href = "choose_user.html";
+                    }
+                    
+                }, "json");
+            }
+        
+        </script>
+
+        <!-- 各种删除：侧边栏的功能板块 -->
+        <script>
+            //教师板块,删除某个教师的信息
+            function deleteTeacher(self_obj){
+                var self_obj_id = $(self_obj).attr("delete_id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var teacher_id = $(arr_td[0]).text();
+                $.post("php/web/delete_teacher.php", {teacher_id : teacher_id}, function(info){
+                    if(info.flag){
+                        $(self_obj).removeClass("btn-primary");
+                        $(self_obj).addClass("btn-danger");
+                        $(self_obj).text("教师成功删除");
+                        $(self_obj).attr("disabled", "disabled");
+                    }
+                    else{
+                        alert(info.errorMsg);
+                    }
+                }, "json");
+            }
+
+            //学生板块,删除某个学生的信息
+            function deleteStudent(self_obj){
+                var self_obj_id = $(self_obj).attr("delete_id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var student_id = $(arr_td[0]).text();
+                $.post("php/web/delete_student.php", {student_id : student_id}, function(info){
+                    if(info.flag){
+                        $(self_obj).removeClass("btn-primary");
+                        $(self_obj).addClass("btn-danger");
+                        $(self_obj).text("学生成功删除");
+                        $(self_obj).attr("disabled", "disabled");
+                    }
+                    else{
+                        alert(info.errorMsg);
+                    }
+                }, "json");
+            }
+
+        </script>
+
+        <!-- 各种修改：侧边栏的功能板块 -->
+        <script>
+            // 修改教师信息
+            function updateTeacherInfo(self_obj){
+                var self_obj_id = $(self_obj).attr("id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var work_li = "";
+                var sex = $(arr_td[3]).text();
+                var work_status = $(arr_td[4]).text();
+
+                if(sex == "男"){
+                    sex = ""+
+                    '<input type="hidden" class="form-control" name="sex"  value="1"  id="sex" readonly="readonly">';
+                }
+                else{
+                    sex = ""+
+                    '<input type="hidden" class="form-control" name="sex"  value="0"  id="sex" readonly="readonly">';
+                }
+
+                if(work_status == "就职"){
+                    work_li = ""+
+                    '<div class="col-md-9">'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="work_status" value="1" checked="checked"> 就职'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="work_status" value="0"> 离职'+
+                        '</label>'+
+                    '</div>';
+                }
+                else if(work_status == "离职"){
+                    work_li = ""+
+                    '<div class="col-md-9">'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="work_status" value="1"> 就职'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="work_status" value="0" checked="checked"> 离职'+
+                        '</label>'+
+                    '</div>';
+                }
+                
+
+                var user_info = ''+
+                '<div class="offset-top-2per col-md-offset-4 col-md-4">'+
+                    '<div class="panel panel-primary">'+
+                        '<div class="panel-heading">修改教师信息</div>'+
+                        '<div class="panel-body " id="panel-body">'+
+                            '<form class="form-horizontal" id="add_teacher" onsubmit="return checkUpdateTeacherInfo(this);">'+
+                                '<div class="form-group">'+
+                                    '<label for="teacher_id" class="col-md-3 control-label">教师ID</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="teacher_id" value="'+$(arr_td[0]).text()+'" id="teacher_id" readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+                
+                                '<div class="form-group">'+
+                                    '<label for="teacher_name" class="col-md-3 control-label">姓名</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="teacher_name" value="'+$(arr_td[2]).text()+'" id="teacher_name" >'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="id_number" class="col-md-3 control-label">身份证</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="id_number" id="id_number" value="'+$(arr_td[1]).text()+'">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div  class="form-group">'+
+                                    '<label for="sex " class="col-md-3 control-label">性别</label>'+
+                                    '<div class="col-md-9">'+sex+
+                                        '<input type="text" class="form-control" name="teacher_sex"  value="'+$(arr_td[3]).text()+'"  id="teacher_sex" readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div  class="form-group">'+
+                                    '<label class="col-md-3 control-label">就职状态</label>'+work_li+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="birthday" class="col-md-3 control-label">出生日期</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="birthday" id="birthday" value="'+$(arr_td[5]).text()+'"  readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="country" class="col-md-3 control-label">国籍</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="country" id="country"  value="'+$(arr_td[6]).text()+'" >'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="address" class="col-md-3 control-label">联系地址</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="address" id="address" value="'+$(arr_td[7]).text()+'" >'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="tellphone" class="col-md-3 control-label">手机号码</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control " name="tellphone" id="tellphone" value="'+$(arr_td[8]).text()+'" >'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<hr>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="" class="col-md-3 control-label"></label>'+
+                                    '<div class="col-md-9">'+
+                                        '<button type="submit" class="col-md-8 btn btn-primary">修改</button>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</form>'+
+                        '</div>'+
+                    '</div>'+
+                '</div>';
+                $("#main_content").empty();
+                $("#main_content").append(user_info);
+                $("#teacher_id").blur(checkTeacherID);
+                $("#id_number").blur(checkTeacherIDNumber);
+                $("#teacher_name").blur(checkTeacherName);
+                $("#country").blur(checkTeacherCountry);
+                $("#address").blur(cheakTeacherAddress);
+                $("#tellphone").blur(checkTeacherTel);
+            }
+        
+            // 修改学生信息
+            function updateStudentInfo(self_obj){
+                var self_obj_id = $(self_obj).attr("id");
+                var tr_id = "tr_" + self_obj_id;
+                var id = "#" + tr_id + '  td';      //选择某个tr下的所有td元素对象
+                var arr_td = $(id);
+                var study_li = "";
+                var sex = $(arr_td[3]).text();
+                var study_status = $(arr_td[5]).text();
+
+                if(sex == "男"){
+                    sex = ""+
+                    '<input type="hidden" class="form-control" name="sex"  value="1"  id="sex" readonly="readonly">';
+                }
+                else{
+                    sex = ""+
+                    '<input type="hidden" class="form-control" name="sex"  value="0"  id="sex" readonly="readonly">';
+                }
+
+                if(study_status == "就读"){
+                    study_li = ""+
+                    '<div class="col-md-9">'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="1" checked="checked"> 就读'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="2"> 毕业'+
+                        '</label>'+
+                        '<label class="radio-inline">'+
+                            '<input type="radio" name="study_status" value="0"> 退学'+
+                        '</label>'+
+                    '</div>';
+                }
+                else if(study_status == "毕业"){
+                    study_li = ""+
+                    '<div class="col-md-9">'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="1"> 就读'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="2" checked="checked"> 毕业'+
+                        '</label>'+
+                        '<label class="radio-inline">'+
+                            '<input type="radio" name="study_status" value="0"> 退学'+
+                        '</label>'+
+                    '</div>';
+                }
+                else if(study_status == "退学"){
+                    study_li = ""+
+                    '<div class="col-md-9">'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="1"> 就读'+
+                        '</label>'+
+                        '<label class="radio-inline col-md-4">'+
+                            '<input type="radio" name="study_status" value="2"> 毕业'+
+                        '</label>'+
+                        '<label class="radio-inline">'+
+                            '<input type="radio" name="study_status" value="0" checked="checked"> 退学'+
+                        '</label>'+
+                    '</div>';
+                }
+                
+
+                var user_info = ''+
+                '<div class="offset-top-2per col-md-offset-4 col-md-4">'+
+                    '<div class="panel panel-primary">'+
+                        '<div class="panel-heading">修改学生信息</div>'+
+                        '<div class="panel-body " id="panel-body">'+
+                            '<form class="form-horizontal" id="add_student" onsubmit="return checkUpdateStudentInfo(this);">'+
+                                '<div class="form-group">'+
+                                    '<label for="student_id" class="col-md-3 control-label">学生ID</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="student_id" value="'+$(arr_td[0]).text()+'" id="student_id" readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="student_name" class="col-md-3 control-label">姓名</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" name="student_name" value="'+$(arr_td[2]).text()+'"  id="student_name">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div  class="form-group">'+
+                                    '<label class="col-md-3 control-label">就读状态</label>'+study_li+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="id_number" class="col-md-3 control-label">身份证</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" value="'+$(arr_td[1]).text()+'"  name="id_number" id="id_number">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div  class="form-group">'+
+                                    '<label for="sex " class="col-md-3 control-label">性别</label>'+
+                                    '<div class="col-md-9">'+sex+
+                                        '<input type="text" class="form-control" name="student_sex" id="student_sex" value="'+$(arr_td[3]).text()+'"  readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="birthday" class="col-md-3 control-label">出生日期</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" value="'+$(arr_td[6]).text()+'"  name="birthday" id="birthday" readonly="readonly">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="country" class="col-md-3 control-label">国籍</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" value="'+$(arr_td[7]).text()+'"  name="country" id="country">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="address" class="col-md-3 control-label">联系地址</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" value="'+$(arr_td[8]).text()+'"  name="address" id="address">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="tellphone" class="col-md-3 control-label">手机号码</label>'+
+                                    '<div class="col-md-9">'+
+                                        '<input type="text" class="form-control" value="'+$(arr_td[9]).text()+'"  name="tellphone" id="tellphone">'+
+                                    '</div>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<hr>'+
+                                '</div>'+
+                                '<div class="form-group">'+
+                                    '<label for="" class="col-md-3 control-label"></label>'+
+                                    '<div class="col-md-9">'+
+                                        '<button type="submit" class="col-md-8 btn btn-primary">修改</button>'+
+                                    '</div>'+
+                                '</div>'+
+                            '</form>'+
+                        '</div>'+
+                    '</div>'+
+                '</div>';
+                $("#main_content").empty();
+                $("#main_content").append(user_info);
+                $("#id_number").blur(checkStudentIDNumber);
+                $("#student_name").blur(checkStudentName);
+                $("#birthday").blur(checkStudentBirthday);
+                $("#country").blur(checkStudentCountry);
+                $("#address").blur(cheakStudentAddress);
+                $("#tellphone").blur(checkStudentTel);
+            }
+        
+        </script>
+    </head>
+    <body>
+        <nav class="navbar nav-div">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="">
+                    <span class="glyphicon glyphicon-blackboard" aria-hidden="true"></span>
+                    <span></span>
+                    A级管理员
+                </a>
+            </div>
+        
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="javascript:void(0);" id="logout" onclick="exit()">退出</a></li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span id="user_name"></span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu text-content-align">
+                            <li><a href="javascript:void(0);" id="show_info">查看个人信息</a></li>
+                            <li><a href="javascript:void(0);" id="update_password">修改密码</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="page-content">
+            <ul class="nav nav-pills nav-stacked">
+                <li id="school" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理学院 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_school">添加学院</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_school" onclick="changePageOfSchool(this)">查看学院</a></li>
+                    </ul>
+                </li>
+                <li id="major" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理专业 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_major">添加专业</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_major" onclick="changePageOfMajor(this)">查看专业</a></li>
+                    </ul>
+                </li>
+                <li id="classes" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理班级 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_class">添加班级</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_class" onclick="changePageOfClass(this)">查看班级</a></li>
+                    </ul>
+                </li>
+                <li id="teacher" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理教师 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_teacher">添加教师</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_teacher" onclick="changePageOfTeacher(this)">查看教师</a></li>
+                    </ul>
+                </li>
+                <li id="student" role="presentation" class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);" role="button" aria-haspopup="true" aria-expanded="false">
+                        管理学生 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu col-md-12 text-content-align">
+                        <li><a href="javascript:void(0);" id="add_a_student">添加学生</a></li>
+                        <li><a href="javascript:void(0);" id="update_a_student" onclick="changePageOfStudent(this)">查看学生</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content" id="main_content">
+            
+        </div>
+    </body>
+</html>
