@@ -1,2 +1,2 @@
-# php-schoolaffairs-manage-system
+# ManageSystem-PHP
 PHP的校务管理系统
